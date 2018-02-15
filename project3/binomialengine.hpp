@@ -5,16 +5,13 @@
  Copyright (C) 2002, 2003 RiskMap srl
  Copyright (C) 2003, 2004, 2005, 2007 StatPro Italia srl
  Copyright (C) 2007 Affine Group Limited
-
  This file is part of QuantLib, a free-software/open-source library
  for financial quantitative analysts and developers - http://quantlib.org/
-
  QuantLib is free software: you can redistribute it and/or modify it
  under the terms of the QuantLib license.  You should have received a
  copy of the license along with this program; if not, please email
  <quantlib-dev@lists.sf.net>. The license is also available online at
  <http://quantlib.org/license.shtml>.
-
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  FOR A PARTICULAR PURPOSE.  See the license for more details.
@@ -40,10 +37,8 @@ namespace QuantLib {
 
     //! Pricing engine for vanilla options using binomial trees
     /*! \ingroup vanillaengines
-
         \test the correctness of the returned values is tested by
               checking it against analytic results.
-
         \todo Greeks are not overly accurate. They could be improved
               by building a tree so that it has three points at the
               current time. The value would be fetched from the middle
@@ -128,24 +123,24 @@ namespace QuantLib {
         // binomial tree 
         // (see J.C.Hull, "Options, Futures and other derivatives", 6th edition, pp 397/398)
 
-        // Rollback to third-last step, and get underlying prices (s2) &
-        // option values (p2) at this point
+        // Rollback to t = 0, and get underlying prices (s0, s0d_u, s0u_d) &
+        // option values (p0, p0d_u, p0u_d) at this point
         option.rollback(grid[0]);
         Array va0(option.values());
-        QL_ENSURE(va0.size() == 3, "Expect 3 nodes in grid at second step");
+        QL_ENSURE(va0.size() == 3, "Expect 3 nodes in grid at t = 0");
         Real p0u_d = va0[2]; // up
         Real p0 = va0[1]; // mid
         Real p0d_u = va0[0]; // down (low)
         Real s0u_d = lattice->underlying(0, 2); // up price
-        Real s0 = lattice->underlying(0, 1); // middle price
+        s0 = lattice->underlying(0, 1); // middle price
         Real s0d_u = lattice->underlying(0, 0); // down (low) price
+	Real prob_u = tree.probability(0, 1, 1); // probability up
 
         // calculate gamma by taking the first derivate of the two deltas
         Real delta1 = (p0u_d - p0)/(s0u_d-s0);
         Real delta2 = (p0-p0d_u)/(s0-s0d_u);
         Real gamma = (delta1 - delta2) / ((s0u_d-s0d_u)/2);
-
-		Real delta = 0.5*(delta1+delta2); // ****!!!!!!!CHERCHER PROBABILITE pu, pd
+	Real delta = prob_u*delta1+(1-prob_u)*delta2;
         
         // Store results
         results_.value = p0;
